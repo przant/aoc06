@@ -13,14 +13,14 @@ type Record struct {
 }
 
 func main() {
-    pf, err := os.Open("example.txt")
+    pf, err := os.Open("input.txt")
     if err != nil {
         log.Fatalf("while opening file %q: %s", pf.Name(), err)
     }
     defer pf.Close()
 
-    sTime := make([]int64, 0)
-    sDist := make([]int64, 0)
+    timeStr := ""
+    distStr := ""
 
     scnr := bufio.NewScanner(pf)
 
@@ -33,37 +33,44 @@ func main() {
                 if time == "" {
                     continue
                 }
-                value, _ := strconv.Atoi(strings.TrimSpace(time))
-                sTime = append(sTime, int64(value))
+                timeStr += time
             }
         case strings.Contains(line, "Distance"):
+
             dists := strings.Split(strings.TrimSpace(strings.Split(line, ":")[1]), " ")
             for _, dist := range dists {
                 if dist == "" {
                     continue
                 }
-                value, _ := strconv.Atoi(strings.TrimSpace(dist))
-                sDist = append(sDist, int64(value))
+                distStr += dist
             }
         }
     }
 
-    total := len(sTime)
+    time, _ := strconv.Atoi(timeStr)
+    dist, _ := strconv.Atoi(distStr)
 
-    result := int64(1)
-    for r := 0; r < total; r++ {
-        result *= newRecordsCount(sTime[r], sDist[r])
-    }
-    fmt.Println(result)
+    fmt.Printf("Time %d, Dist %d\n", time, dist)
+    fmt.Println(newRecordsCount(int64(time), int64(dist)))
+
 }
 
-func newRecordsCount(t, d int64) int64 {
-    nrc := int64(0)
+func newRecordsCount(t, d int64) uint64 {
+    nrc := uint64(0)
     for i := int64(0); i < t; i++ {
-
         if i*(t-i) > d {
             nrc++
         }
     }
     return nrc
+}
+
+func concurrentRecordsCount(t, d int64, ch chan<- int64) {
+    nrc := int64(0)
+    for i := int64(0); i < t; i++ {
+        if i*(t-i) > d {
+            nrc++
+        }
+    }
+    ch <- nrc
 }
